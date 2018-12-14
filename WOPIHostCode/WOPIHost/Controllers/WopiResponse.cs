@@ -36,6 +36,9 @@ namespace WOPIHost.Controllers
         //public bool DisableBrowserCachingOfUserContent { get; set; }
 
         //public string SHA256 { get; set; }
+
+        public bool SupportsScenarioLinks { get; set; }
+        public bool SupportsSecureStore { get; set; }
     }
 
     class PutRelativeFileResponse

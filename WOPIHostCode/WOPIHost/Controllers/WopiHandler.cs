@@ -93,6 +93,9 @@ namespace WOPIHost.Controllers
                 case RequestType.PutFile:
                     HandlePutFileRequest(context, requestData);
                     break;
+                case RequestType.GetRestrictedLink:
+                    HandleGetRestrictedLink(context, requestData);
+                    break;
 
                 // These request types are not implemented in this sample.
                 // Of these, only PutRelativeFile would be implemented by a typical WOPI host.
@@ -101,7 +104,6 @@ namespace WOPIHost.Controllers
                 case RequestType.CheckFolderInfo:
                 case RequestType.DeleteFile:
                 case RequestType.ExecuteCobaltRequest:
-                case RequestType.GetRestrictedLink:
                 case RequestType.ReadSecureStore:
                 case RequestType.RevokeRestrictedLink:
                     ReturnUnsupported(context.Response);
@@ -129,7 +131,8 @@ namespace WOPIHost.Controllers
             {
                 Type = RequestType.None,
                 AccessToken = request.QueryString["access_token"],
-                Id = ""
+                Id = "",
+                Headers = request.Headers
             };
 
             // request.Url pattern:
@@ -299,6 +302,8 @@ namespace WOPIHost.Controllers
                     SupportsLocks = true,
                     SupportsUpdate = true,
                     UserCanNotWriteRelative = true, /* Because this host does not support PutRelativeFile */
+                    SupportsScenarioLinks = true,
+                    SupportsSecureStore = true,
 
                     ReadOnly = bRO,
                     UserCanWrite = !bRO
@@ -667,6 +672,89 @@ namespace WOPIHost.Controllers
                     ReturnLockMismatch(context.Response, reason: "File not locked");
                 }
             }
+        }
+
+        /// <summary>
+        /// Processes a GetRestrictedLink request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on GetRestrictedLink, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/GetRestrictedLink.html
+        /// </remarks>
+        private void HandleGetRestrictedLink(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            if (!requestData.Headers[WopiHeaders.RestrictedLink].Equals("FORMS"))
+            {
+                ReturnUnsupported(context.Response);
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            context.Response.AddHeader("X-WOPI-RestrictedUseLink", "http://officeserver4/restricted/" + requestData.Id);
+            ReturnSuccess(context.Response);
+        }
+
+        /// <summary>
+        /// Processes a RevokeRestrictedLink request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on RevokeRestrictedLink, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/RevokeRestrictedLink.html
+        /// </remarks>
+        private void HandleRevokeRestrictedLink(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            // TODO
+        }
+
+        /// <summary>
+        /// Processes a ReadSecureStore request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on ReadSecureStore, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/ReadSecureStore.html
+        /// </remarks>
+        private void HandleReadSecureStore(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            // TODO
+        }
+
+        /// <summary>
+        /// Processes a CheckFolderInfo request
+        /// </summary>
+        private void HandleCheckFolderInfo(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            // TODO
         }
 
         #endregion

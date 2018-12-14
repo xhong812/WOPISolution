@@ -43,6 +43,8 @@ namespace WOPIHost.Controllers
         public const string SuggestedTarget = "X-WOPI-SuggestedTarget";
         public const string RelativeTarget = "X-WOPI-RelativeTarget";
         public const string OverwriteRelativeTarget = "X-WOPI-OverwriteRelativeTarget";
+        public const string UsingRestrictedScenario = "X-WOPI-UsingRestrictedScenario";
+        public const string RestrictedLink = "X-WOPI-RestrictedLink";
     }
 
     class WopiRequest
@@ -52,6 +54,8 @@ namespace WOPIHost.Controllers
         public string AccessToken { get; set; }
 
         public string Id { get; set; }
+
+        public System.Collections.Specialized.NameValueCollection Headers { get; set; }
 
         public string FullPath
         {
