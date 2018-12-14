@@ -692,6 +692,7 @@ namespace WOPIHost.Controllers
             if (!requestData.Headers[WopiHeaders.RestrictedLink].Equals("FORMS"))
             {
                 ReturnUnsupported(context.Response);
+                return;
             }
 
             IFileStorage storage = FileStorageFactory.CreateFileStorage();
