@@ -788,7 +788,7 @@ namespace WOPIHost.Controllers
                 return;
             }
 
-            if (string.IsNullOrEmpty(requestData.Headers.Get(requestData.Headers[WopiHeaders.ApplicationId])))
+            if (string.IsNullOrEmpty(requestData.Headers.Get(WopiHeaders.ApplicationId)))
             {
                 ReturnUnsupported(context.Response);
                 return;
