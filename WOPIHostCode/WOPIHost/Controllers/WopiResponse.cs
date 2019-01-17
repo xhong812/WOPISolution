@@ -39,6 +39,7 @@ namespace WOPIHost.Controllers
 
         public bool SupportsScenarioLinks { get; set; }
         public bool SupportsSecureStore { get; set; }
+        public bool SupportsDeleteFile { get; set; }
     }
 
     class PutRelativeFileResponse

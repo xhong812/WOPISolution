@@ -146,8 +146,8 @@ namespace WOPIHost
         /// <returns>Return a string representing the file version.</returns>
         public string GetFileVersion(string name)
         {
-            DateTime ftime = (DateTime) GetLastModifiedTime(name);
-            return ftime.ToString("O" /* ISO 8601 DateTime format string */); 
+            DateTime ftime = (DateTime)GetLastModifiedTime(name);
+            return ftime.ToString("O" /* ISO 8601 DateTime format string */);
         }
 
         /// <summary>
@@ -162,6 +162,16 @@ namespace WOPIHost
         }
 
         public DirectoryInfo GetDirecotry()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteFile(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CreateOrOverwriteFile(string name, Stream stream)
         {
             throw new NotImplementedException();
         }

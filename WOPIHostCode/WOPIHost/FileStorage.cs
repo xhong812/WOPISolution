@@ -156,5 +156,48 @@ namespace WOPIHost
             FileInfo fileInfo = new FileInfo(fullPath);
             return fileInfo.IsReadOnly;
         }
+
+        /// <summary>
+        /// Delete the file.
+        /// </summary>
+        /// <param name="name">File name</param>
+        /// <returns>Return true if succeed.</returns>
+        public void DeleteFile(string name)
+        {
+            string fullPath = Path.Combine(localStoragePath, name);
+            FileInfo file = new FileInfo(fullPath);
+            file.Delete();
+        }
+
+        /// <summary>
+        /// Create a new file or overwrite an existing file.
+        /// </summary>
+        /// <param name="name">File name</param>
+        /// <param name="stream">File stream</param>
+        public void CreateOrOverwriteFile(string name, Stream stream)
+        {
+            string fullPath = Path.Combine(localStoragePath, name);
+            FileInfo file = new FileInfo(fullPath);
+            if (file.Exists)
+            {
+                using (var fileStream = File.Open(fullPath, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    stream.CopyTo(fileStream);
+                }
+
+                stream.Close();
+                stream.Dispose();
+            }
+            else
+            {
+                using (var fileStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+                {
+                    stream.CopyTo(fileStream);
+                }
+
+                stream.Close();
+                stream.Dispose();
+            }
+        }
     }
 }

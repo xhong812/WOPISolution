@@ -63,5 +63,18 @@ namespace WOPIHost
         /// </summary>
         /// <returns>Directory info</returns>
         DirectoryInfo GetDirecotry();
+
+        /// <summary>
+        /// Delete the file.
+        /// </summary>
+        /// <param name="name">File name</param>
+        void DeleteFile(string name);
+
+        /// <summary>
+        /// Create a new file or overwrite an existing file.
+        /// </summary>
+        /// <param name="name">File name</param>
+        /// <param name="stream">File stream</param>
+        void CreateOrOverwriteFile(string name, Stream stream);
     }
 }

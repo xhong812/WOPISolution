@@ -109,12 +109,16 @@ namespace WOPIHost.Controllers
                 case RequestType.EnumerateAncestors:
                     HandleEnumerateAncestorsForFile(context, requestData);
                     break;
+                case RequestType.DeleteFile:
+                    HandleDeleteFileRequest(context, requestData);
+                    break;
+                case RequestType.PutRelativeFile:
+                    HandlePutRelativeFileRequest(context, requestData);
+                    break;
 
                 // These request types are not implemented in this sample.
                 // Of these, only PutRelativeFile would be implemented by a typical WOPI host.
-                case RequestType.PutRelativeFile: // If this is implemented, the UserCanNotWriteRelative field in CheckFileInfo needs to be updated.
                 case RequestType.EnumerateChildren:
-                case RequestType.DeleteFile:
                 case RequestType.ExecuteCobaltRequest:
                     ReturnUnsupported(context.Response);
                     break;
@@ -318,9 +322,11 @@ namespace WOPIHost.Controllers
 
                     SupportsLocks = true,
                     SupportsUpdate = true,
-                    UserCanNotWriteRelative = true, /* Because this host does not support PutRelativeFile */
+                    UserCanNotWriteRelative = false, /* Because this host does not support PutRelativeFile */
                     SupportsScenarioLinks = true,
                     SupportsSecureStore = true,
+                    SupportsDeleteFile = true,
+
 
                     ReadOnly = bRO,
                     UserCanWrite = !bRO
@@ -335,6 +341,43 @@ namespace WOPIHost.Controllers
             {
                 ReturnFileUnknown(context.Response);
             }
+        }
+
+        /// <summary>
+        /// Processes a DeleteFile request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on DeleteFile, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/DeleteFile.html
+        /// </remarks>
+        private void HandleDeleteFileRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            LockInfo existingLock;
+            bool fLocked = TryGetLock(requestData.Id, out existingLock);
+            if (fLocked)
+            {
+                context.Response.AddHeader("X-WOPI-Lock", existingLock.Lock);
+                ReturnStatus(context.Response, 409, "Locked by another interface");
+            }
+
+            storage.DeleteFile(requestData.Id);
+
+            ReturnSuccess(context.Response);
         }
 
         /// <summary>
@@ -469,6 +512,95 @@ namespace WOPIHost.Controllers
             {
                 ReturnServerError(context.Response);
             }
+        }
+
+        /// <summary>
+        /// Processes a PutRelativeFile request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on PutRelativeFile, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/PutRelativeFile.html
+        /// </remarks>
+        private void HandlePutRelativeFileRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: true))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            string suggestedTarget = requestData.Headers.Get("X-WOPI-SuggestedTarget");
+            string relativeTarget = requestData.Headers.Get("X-WOPI-RelativeTarget");
+            string overwriteRelativeTarget = requestData.Headers.Get("X-WOPI-OverwriteRelativeTarget");
+            string fileSize = requestData.Headers.Get("X-WOPI-Size");
+
+            if (string.IsNullOrEmpty(relativeTarget) && string.IsNullOrEmpty(suggestedTarget))
+            {
+                ReturnUnsupported(context.Response);
+                return;
+            }
+
+            string newFileName = string.Empty;
+            if (!string.IsNullOrEmpty(relativeTarget))
+            {
+                newFileName = relativeTarget;
+            }
+            else
+            {
+                if (suggestedTarget.StartsWith(".") && suggestedTarget.Split('.').Length == 1)
+                {
+                    newFileName = requestData.Id.Substring(0, requestData.Id.LastIndexOf('.') - 1) + suggestedTarget;
+                }
+                else
+                {
+                    newFileName = suggestedTarget;
+                }
+            }
+
+            size = storage.GetFileSize(newFileName);
+
+            if (size != -1)
+            {
+                bool overwrite = string.IsNullOrEmpty(overwriteRelativeTarget) ? false : Boolean.Parse(overwriteRelativeTarget);
+
+                LockInfo existingLock;
+                bool fLocked = TryGetLock(newFileName, out existingLock);
+
+                if (!string.IsNullOrEmpty(relativeTarget))
+                {
+                    if (!overwrite || (overwrite && fLocked))
+                    {
+                        ReturnStatus(context.Response, 409, "Can not overwrite");
+                        return;
+                    }
+                }
+                else
+                {
+                    newFileName = DateTime.Now.ToLongTimeString() + newFileName;
+                }
+            }
+            storage.CreateOrOverwriteFile(newFileName, context.Request.InputStream);
+
+            PutRelativeFileResponse responseData = new PutRelativeFileResponse()
+            {
+                Name = newFileName,
+                Url = "http://" + context.Request.Url.Authority + context.Request.Url.AbsolutePath.Replace(requestData.Id, newFileName) + "?access_token=" +
+                        AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), newFileName.ToLower()))
+            };
+
+            string jsonString = JsonConvert.SerializeObject(responseData);
+
+            context.Response.Write(jsonString);
+            ReturnSuccess(context.Response);
         }
 
         /// <summary>
@@ -822,7 +954,7 @@ namespace WOPIHost.Controllers
             IFileStorage storage = FileStorageFactory.CreateFileStorage();
             DirectoryInfo directory = storage.GetDirecotry();
 
-            if (!requestData.Id.Equals(directory.Name.ToLower()))
+            if (!requestData.Id.ToLower().Equals(directory.Name.ToLower()))
             {
                 ReturnFileUnknown(context.Response);
                 return;
