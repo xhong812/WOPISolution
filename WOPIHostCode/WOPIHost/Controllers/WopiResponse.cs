@@ -42,6 +42,11 @@ namespace WOPIHost.Controllers
         public bool SupportsDeleteFile { get; set; }
         public bool SupportsRename { get; set; }
         public bool UserCanRename { get; set; }
+        public bool SupportsGetLock { get; set; }
+        public bool SupportsUserInfo { get; set; }
+
+        public string[] SupportedShareUrlTypes { get; set; }
+        public string UserInfo { get; set; }
     }
 
     class PutRelativeFileResponse
@@ -63,6 +68,11 @@ namespace WOPIHost.Controllers
     class RenameFileResponse
     {
         public string Name { get; set; }
+    }
+
+    class GetShareUrlResponse
+    {
+        public string ShareUrl { get; set; }
     }
 
     class EnumerateAncestorsResponse

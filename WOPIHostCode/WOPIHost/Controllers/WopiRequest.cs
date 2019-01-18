@@ -14,6 +14,7 @@ namespace WOPIHost.Controllers
         Unlock,
         RefreshLock,
         UnlockAndRelock,
+        GetLock,
 
         ExecuteCobaltRequest,
 
@@ -29,7 +30,10 @@ namespace WOPIHost.Controllers
         PutFile,
 
         EnumerateChildren,
-        EnumerateAncestors
+        EnumerateAncestors,
+
+        GetShareUrl,
+        PutUserInfo
     }
 
     static class WopiHeaders

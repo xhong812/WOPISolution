@@ -118,6 +118,15 @@ namespace WOPIHost.Controllers
                 case RequestType.RenameFile:
                     HandleRenameFileRequest(context, requestData);
                     break;
+                case RequestType.GetLock:
+                    HandleGetLockRequest(context, requestData);
+                    break;
+                case RequestType.GetShareUrl:
+                    HandleGetShareUrlRequest(context, requestData);
+                    break;
+                case RequestType.PutUserInfo:
+                    HandlePutUserInfoRequest(context, requestData);
+                    break;
 
                 // These request types are not implemented in this sample.
                 // Of these, only PutRelativeFile would be implemented by a typical WOPI host.
@@ -224,6 +233,9 @@ namespace WOPIHost.Controllers
                             case "REFRESH_LOCK":
                                 requestData.Type = RequestType.RefreshLock;
                                 break;
+                            case "GET_LOCK":
+                                requestData.Type = RequestType.GetLock;
+                                break;
                             case "COBALT":
                                 requestData.Type = RequestType.ExecuteCobaltRequest;
                                 break;
@@ -242,6 +254,13 @@ namespace WOPIHost.Controllers
                             case "RENAME_FILE":
                                 requestData.Type = RequestType.RenameFile;
                                 break;
+                            case "GET_SHARE_URL":
+                                requestData.Type = RequestType.GetShareUrl;
+                                break;
+                            case "PUT_USER_INFO":
+                                requestData.Type = RequestType.PutUserInfo;
+                                break;
+
                         }
                     }
                 }
@@ -334,11 +353,20 @@ namespace WOPIHost.Controllers
                     SupportsDeleteFile = true,
                     SupportsRename = true,
                     UserCanRename = true,
-
+                    SupportsGetLock = true,
+                    SupportsUserInfo = true,
 
                     ReadOnly = bRO,
-                    UserCanWrite = !bRO
+                    UserCanWrite = !bRO,
+
+                    SupportedShareUrlTypes = new string[] { "ReadOnly", "ReadWrite" }
                 };
+
+                string userName = AccessTokenUtil.GetUserFromToken(requestData.AccessToken);
+                if (UserInfo.ContainsKey(userName))
+                {
+                    responseData.UserInfo = UserInfo[userName];
+                }
 
                 string jsonString = JsonConvert.SerializeObject(responseData);
 
@@ -387,6 +415,87 @@ namespace WOPIHost.Controllers
 
             ReturnSuccess(context.Response);
         }
+
+        /// <summary>
+        /// Processes a GetShareUrl request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on GetShareUrl, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/GetShareUrl.html
+        /// </remarks>
+        private void HandleGetShareUrlRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            string urlType = requestData.Headers.Get("X-WOPI-UrlType");
+            if (string.IsNullOrEmpty(urlType) || (!urlType.Equals("ReadOnly") && !urlType.Equals("ReadWrite")))
+            {
+                ReturnUnsupported(context.Response);
+                return;
+            }
+
+            GetShareUrlResponse responseData = new GetShareUrlResponse()
+            {
+                ShareUrl = "http://test"
+            };
+
+            string jsonString = JsonConvert.SerializeObject(responseData);
+
+            context.Response.Write(jsonString);
+            ReturnSuccess(context.Response);
+        }
+
+        /// <summary>
+        /// Processes a PutUserInfo request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on PutUserInfo, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/PutUserInfo.html
+        /// </remarks>
+        private void HandlePutUserInfoRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            string userName = AccessTokenUtil.GetUserFromToken(requestData.AccessToken);
+            StreamReader reader = new StreamReader(context.Request.InputStream);
+            string userInfo = reader.ReadToEnd();
+            if (!UserInfo.ContainsKey(userName))
+            {
+                UserInfo.Add(userName, userInfo);
+            }
+
+            UserInfo[userName] = userInfo;
+
+            ReturnSuccess(context.Response);
+        }
+
+        static Dictionary<string, string> UserInfo = new Dictionary<string, string>();
 
         /// <summary>
         /// Processes a GetFile request
@@ -734,6 +843,41 @@ namespace WOPIHost.Controllers
                     ReturnSuccess(context.Response);
                 }
             }
+        }
+
+        /// <summary>
+        /// Processes a GetLock request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on GetLock, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/GetLock.html
+        /// </remarks>
+        private void HandleGetLockRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: true))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            LockInfo existingLock;
+            bool fLocked = TryGetLock(requestData.Id, out existingLock);
+            string lockStr = fLocked ? existingLock.Lock : string.Empty;
+
+            context.Response.AddHeader("X-WOPI-Lock", lockStr);
+
+            // Return success
+            ReturnSuccess(context.Response);
+
         }
 
         /// <summary>
