@@ -115,6 +115,9 @@ namespace WOPIHost.Controllers
                 case RequestType.PutRelativeFile:
                     HandlePutRelativeFileRequest(context, requestData);
                     break;
+                case RequestType.RenameFile:
+                    HandleRenameFileRequest(context, requestData);
+                    break;
 
                 // These request types are not implemented in this sample.
                 // Of these, only PutRelativeFile would be implemented by a typical WOPI host.
@@ -236,6 +239,9 @@ namespace WOPIHost.Controllers
                             case "REVOKE_RESTRICTED_LINK":
                                 requestData.Type = RequestType.RevokeRestrictedLink;
                                 break;
+                            case "RENAME_FILE":
+                                requestData.Type = RequestType.RenameFile;
+                                break;
                         }
                     }
                 }
@@ -322,10 +328,12 @@ namespace WOPIHost.Controllers
 
                     SupportsLocks = true,
                     SupportsUpdate = true,
-                    UserCanNotWriteRelative = false, /* Because this host does not support PutRelativeFile */
+                    UserCanNotWriteRelative = false,
                     SupportsScenarioLinks = true,
                     SupportsSecureStore = true,
                     SupportsDeleteFile = true,
+                    SupportsRename = true,
+                    UserCanRename = true,
 
 
                     ReadOnly = bRO,
@@ -539,10 +547,20 @@ namespace WOPIHost.Controllers
             }
 
             string suggestedTarget = requestData.Headers.Get("X-WOPI-SuggestedTarget");
+            if (suggestedTarget != null)
+            {
+                suggestedTarget = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-SuggestedTarget")), System.Text.Encoding.UTF7);
+            }
+
             string relativeTarget = requestData.Headers.Get("X-WOPI-RelativeTarget");
+            if (relativeTarget != null)
+            {
+                relativeTarget = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RelativeTarget")), System.Text.Encoding.UTF7);;
+            }
+            
             string overwriteRelativeTarget = requestData.Headers.Get("X-WOPI-OverwriteRelativeTarget");
             string fileSize = requestData.Headers.Get("X-WOPI-Size");
-
+            
             if (string.IsNullOrEmpty(relativeTarget) && string.IsNullOrEmpty(suggestedTarget))
             {
                 ReturnUnsupported(context.Response);
@@ -595,6 +613,63 @@ namespace WOPIHost.Controllers
                 Name = newFileName,
                 Url = "http://" + context.Request.Url.Authority + context.Request.Url.AbsolutePath.Replace(requestData.Id, newFileName) + "?access_token=" +
                         AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), newFileName.ToLower()))
+            };
+
+            string jsonString = JsonConvert.SerializeObject(responseData);
+
+            context.Response.Write(jsonString);
+            ReturnSuccess(context.Response);
+        }
+
+        /// <summary>
+        /// Processes a RenameFile request
+        /// </summary>
+        /// <remarks>
+        /// For full documentation on RenameFile, see
+        /// https://wopi.readthedocs.io/projects/wopirest/en/latest/files/RenameFile.html
+        /// </remarks>
+        private void HandleRenameFileRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: true))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            string lockStr = requestData.Headers.Get("X-WOPI-Lock");
+            string requestedName = requestData.Headers.Get("X-WOPI-RequestedName");
+            if (requestedName != null)
+            {
+                requestedName = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RequestedName")), System.Text.Encoding.UTF7); 
+            }
+
+            LockInfo existingLock;
+            bool fLocked = TryGetLock(requestData.Id, out existingLock);
+            if (fLocked && existingLock.Lock != lockStr)
+            {
+                ReturnLockMismatch(context.Response, existingLock.Lock);
+                return;
+            }
+
+            if(!storage.RenameFile(requestData.Id, ref requestedName))
+            {
+                context.Response.Headers.Add("X-WOPI-InvalidFileNameError", "File with same name has existed.");
+                ReturnStatus(context.Response, 400, "File with same name has existed.");
+                return;
+            }
+
+            RenameFileResponse responseData = new RenameFileResponse()
+            {
+                Name = requestedName
             };
 
             string jsonString = JsonConvert.SerializeObject(responseData);

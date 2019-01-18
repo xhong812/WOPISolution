@@ -199,5 +199,32 @@ namespace WOPIHost
                 stream.Dispose();
             }
         }
+
+        /// <summary>
+        /// Rename a file
+        /// </summary>
+        /// <param name="name">Old name</param>
+        /// <param name="newName">New name</param>
+        public bool RenameFile(string name, ref string newName)
+        {
+            string fullPath = Path.Combine(localStoragePath, name);
+            FileInfo file = new FileInfo(fullPath);
+            if (!file.Exists)
+            {
+                throw new Exception(string.Format("The file with name '{0}' does not exist.", name));
+            }
+
+            string newFullPath = Path.Combine(localStoragePath, newName + file.Extension);
+            FileInfo fileNew = new FileInfo(newFullPath);
+            if (fileNew.Exists)                
+            {
+                newName = newName + System.Guid.NewGuid();
+                newFullPath = Path.Combine(localStoragePath, newName + file.Extension);
+                //return false;
+            }
+
+            file.MoveTo(newFullPath);
+            return true;
+        }
     }
 }

@@ -175,5 +175,10 @@ namespace WOPIHost
         {
             throw new NotImplementedException();
         }
+
+        public bool RenameFile(string name, ref string newName)
+        {
+            throw new NotImplementedException(); 
+        }
     }
 }

@@ -76,5 +76,12 @@ namespace WOPIHost
         /// <param name="name">File name</param>
         /// <param name="stream">File stream</param>
         void CreateOrOverwriteFile(string name, Stream stream);
+
+        /// <summary>
+        /// Rename a file
+        /// </summary>
+        /// <param name="name">Old name</param>
+        /// <param name="newName">New name</param>
+        bool RenameFile(string name, ref string newName);
     }
 }

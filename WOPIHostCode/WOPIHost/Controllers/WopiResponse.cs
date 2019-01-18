@@ -40,6 +40,8 @@ namespace WOPIHost.Controllers
         public bool SupportsScenarioLinks { get; set; }
         public bool SupportsSecureStore { get; set; }
         public bool SupportsDeleteFile { get; set; }
+        public bool SupportsRename { get; set; }
+        public bool UserCanRename { get; set; }
     }
 
     class PutRelativeFileResponse
@@ -56,6 +58,11 @@ namespace WOPIHost.Controllers
         public string Password { get; set; }
         public bool IsWindowsCredentials { get; set; }
         public bool IsGroup { get; set; }
+    }
+
+    class RenameFileResponse
+    {
+        public string Name { get; set; }
     }
 
     class EnumerateAncestorsResponse

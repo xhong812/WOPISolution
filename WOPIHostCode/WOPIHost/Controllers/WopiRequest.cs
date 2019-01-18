@@ -21,6 +21,7 @@ namespace WOPIHost.Controllers
         ReadSecureStore,
         GetRestrictedLink,
         RevokeRestrictedLink,
+        RenameFile,
 
         CheckFolderInfo,
 
