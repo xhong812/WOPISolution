@@ -409,6 +409,7 @@ namespace WOPIHost.Controllers
             {
                 context.Response.AddHeader("X-WOPI-Lock", existingLock.Lock);
                 ReturnStatus(context.Response, 409, "Locked by another interface");
+                return;
             }
 
             storage.DeleteFile(requestData.Id);
@@ -664,12 +665,12 @@ namespace WOPIHost.Controllers
             string relativeTarget = requestData.Headers.Get("X-WOPI-RelativeTarget");
             if (relativeTarget != null)
             {
-                relativeTarget = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RelativeTarget")), System.Text.Encoding.UTF7);;
+                relativeTarget = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RelativeTarget")), System.Text.Encoding.UTF7); ;
             }
-            
+
             string overwriteRelativeTarget = requestData.Headers.Get("X-WOPI-OverwriteRelativeTarget");
             string fileSize = requestData.Headers.Get("X-WOPI-Size");
-            
+
             if (string.IsNullOrEmpty(relativeTarget) && string.IsNullOrEmpty(suggestedTarget))
             {
                 ReturnUnsupported(context.Response);
@@ -758,7 +759,7 @@ namespace WOPIHost.Controllers
             string requestedName = requestData.Headers.Get("X-WOPI-RequestedName");
             if (requestedName != null)
             {
-                requestedName = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RequestedName")), System.Text.Encoding.UTF7); 
+                requestedName = HttpUtility.UrlDecode(Uri.EscapeDataString(requestData.Headers.Get("X-WOPI-RequestedName")), System.Text.Encoding.UTF7);
             }
 
             LockInfo existingLock;
@@ -769,7 +770,7 @@ namespace WOPIHost.Controllers
                 return;
             }
 
-            if(!storage.RenameFile(requestData.Id, ref requestedName))
+            if (!storage.RenameFile(requestData.Id, ref requestedName))
             {
                 context.Response.Headers.Add("X-WOPI-InvalidFileNameError", "File with same name has existed.");
                 ReturnStatus(context.Response, 400, "File with same name has existed.");
