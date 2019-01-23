@@ -11,6 +11,7 @@ namespace WOPIHost.Controllers
         public int Size { get; set; }
         public string UserId { get; set; }
         public string Version { get; set; }
+        public string FileExtension { get; set; }
 
         public string BreadcrumbBrandName { get; set; }
         public string BreadcrumbBrandUrl { get; set; }

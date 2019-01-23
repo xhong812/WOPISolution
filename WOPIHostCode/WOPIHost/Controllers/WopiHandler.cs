@@ -334,6 +334,7 @@ namespace WOPIHost.Controllers
                     Size = Convert.ToInt32(size),
                     Version = storage.GetFileVersion(requestData.Id),
                     UserId = "WOPITestUser",
+                    FileExtension = Path.GetExtension(requestData.Id),
 
                     // optional CheckFileInfo properties
                     BreadcrumbBrandName = "LocalStorage WOPI Host",
@@ -604,6 +605,7 @@ namespace WOPIHost.Controllers
                 // With no lock and a non-zero file, a PutFile could potentially result in data loss by clobbering
                 // existing content.  Therefore, return a lock mismatch error.
                 ReturnLockMismatch(context.Response, reason: "PutFile on unlocked file with current size != 0");
+                return;
             }
 
             // Either the file has a valid lock that matches the lock in the request, or the file is unlocked
@@ -677,6 +679,12 @@ namespace WOPIHost.Controllers
                 return;
             }
 
+            if (!string.IsNullOrEmpty(relativeTarget) && !string.IsNullOrEmpty(suggestedTarget))
+            {
+                ReturnUnsupported(context.Response);
+                return;
+            }
+
             string newFileName = string.Empty;
             if (!string.IsNullOrEmpty(relativeTarget))
             {
@@ -713,7 +721,7 @@ namespace WOPIHost.Controllers
                 }
                 else
                 {
-                    newFileName = DateTime.Now.ToLongTimeString() + newFileName;
+                    newFileName = System.Guid.NewGuid() + newFileName;
                 }
             }
             storage.CreateOrOverwriteFile(newFileName, context.Request.InputStream);
