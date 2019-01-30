@@ -41,7 +41,7 @@ namespace WOPIHost.Controllers
             {
                 FileLink fileLink = new FileLink();
                 fileLink.Name = fileName;
-                if (fileName == ".wopitest")
+                if (fileName.EndsWith(".wopitest"))
                 {
                     fileLink.Url = string.Format("http://{0}/WopiValidator/Index/{1}",
                         ConfigurationManager.AppSettings["WOPIServerName"],

@@ -351,7 +351,7 @@ namespace WOPIHost.Controllers
                     UserCanNotWriteRelative = false,
                     SupportsScenarioLinks = true,
                     SupportsSecureStore = true,
-                    SupportsDeleteFile = true,
+                    SupportsFolders = true,
                     SupportsRename = true,
                     UserCanRename = true,
                     SupportsGetLock = true,
@@ -360,7 +360,8 @@ namespace WOPIHost.Controllers
                     ReadOnly = bRO,
                     UserCanWrite = !bRO,
 
-                    SupportedShareUrlTypes = new string[] { "ReadOnly", "ReadWrite" }
+                    SupportedShareUrlTypes = new string[] { "ReadOnly", "ReadWrite" },
+                    UserInfo = string.Empty
                 };
 
                 string userName = AccessTokenUtil.GetUserFromToken(requestData.AccessToken);
@@ -685,22 +686,13 @@ namespace WOPIHost.Controllers
                 return;
             }
 
-            string newFileName = string.Empty;
-            if (!string.IsNullOrEmpty(relativeTarget))
+            string newFileName = relativeTarget ?? suggestedTarget;
+
+            if (newFileName.StartsWith(".") && newFileName.Split('.').Length == 1)
             {
-                newFileName = relativeTarget;
+                newFileName = requestData.Id.Substring(0, requestData.Id.LastIndexOf('.') - 1) + newFileName;
             }
-            else
-            {
-                if (suggestedTarget.StartsWith(".") && suggestedTarget.Split('.').Length == 1)
-                {
-                    newFileName = requestData.Id.Substring(0, requestData.Id.LastIndexOf('.') - 1) + suggestedTarget;
-                }
-                else
-                {
-                    newFileName = suggestedTarget;
-                }
-            }
+
 
             size = storage.GetFileSize(newFileName);
 

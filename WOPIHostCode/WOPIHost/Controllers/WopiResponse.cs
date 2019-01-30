@@ -40,7 +40,7 @@ namespace WOPIHost.Controllers
 
         public bool SupportsScenarioLinks { get; set; }
         public bool SupportsSecureStore { get; set; }
-        public bool SupportsDeleteFile { get; set; }
+        public bool SupportsFolders { get; set; }
         public bool SupportsRename { get; set; }
         public bool UserCanRename { get; set; }
         public bool SupportsGetLock { get; set; }
