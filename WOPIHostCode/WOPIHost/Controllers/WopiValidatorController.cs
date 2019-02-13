@@ -20,9 +20,18 @@ namespace WOPIHost.Controllers
             string uid = "TestUser".ToLower();
 
             wvModel.AccessToken = AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken(uid, sourceDoc));
-            wvModel.HostURL = string.Format("http://{0}/wopi/files/{1}",
-             ConfigurationManager.AppSettings["WOPIServerName"],
-             HttpUtility.UrlEncode(sourceDoc));
+            if (id.Contains("."))
+            {
+                wvModel.HostURL = string.Format("http://{0}/wopi/files/{1}",
+                 ConfigurationManager.AppSettings["WOPIServerName"],
+                 HttpUtility.UrlEncode(sourceDoc));
+            }
+            else
+            {
+                wvModel.HostURL = string.Format("http://{0}/wopi/folders/{1}",
+                    ConfigurationManager.AppSettings["WOPIServerName"],
+                    HttpUtility.UrlEncode(sourceDoc));
+            }
             return View(wvModel);
         }
     }

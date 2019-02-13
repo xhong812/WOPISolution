@@ -127,10 +127,12 @@ namespace WOPIHost.Controllers
                 case RequestType.PutUserInfo:
                     HandlePutUserInfoRequest(context, requestData);
                     break;
+                case RequestType.EnumerateChildren:
+                    HandleEnumerateChildren(context, requestData);
+                    break;
 
                 // These request types are not implemented in this sample.
                 // Of these, only PutRelativeFile would be implemented by a typical WOPI host.
-                case RequestType.EnumerateChildren:
                 case RequestType.ExecuteCobaltRequest:
                     ReturnUnsupported(context.Response);
                     break;
@@ -356,6 +358,7 @@ namespace WOPIHost.Controllers
                     UserCanRename = true,
                     SupportsGetLock = true,
                     SupportsUserInfo = true,
+                    //SupportsDeleteFile = true,
 
                     ReadOnly = bRO,
                     UserCanWrite = !bRO,
@@ -1232,6 +1235,49 @@ namespace WOPIHost.Controllers
 
             string jsonString = JsonConvert.SerializeObject(responseData);
             context.Response.AddHeader("X-WOPI-EnumerationIncomplete", "true");
+            context.Response.Write(jsonString);
+            ReturnSuccess(context.Response);
+        }
+
+        /// <summary>
+        /// Processes an EnumerateChildren request
+        /// </summary>
+        private void HandleEnumerateChildren(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            if (!requestData.Id.Equals(storage.GetDirecotry().Name, StringComparison.InvariantCultureIgnoreCase))
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            string relativeTarget = requestData.Headers.Get("X-WOPI-RelativeTarget");
+
+            DirectoryInfo directory = storage.GetDirecotry();
+
+            List<Child> children = new List<Child>();
+
+            foreach (FileInfo file in directory.EnumerateFiles())
+            {
+                Child child = new Child();
+                child.Name = file.Name;
+                child.Version = storage.GetFileVersion(file.Name);
+                child.Url = "http://" + context.Request.Url.Authority+ "/wopi/files/" + file.Name + "?access_token=" +
+                    AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), file.Name.ToLower()));
+                children.Add(child);
+            }
+            EnumerateChildrenResponse responseData = new EnumerateChildrenResponse
+            {
+                Children = children.ToArray()
+            };
+
+            string jsonString = JsonConvert.SerializeObject(responseData);
             context.Response.Write(jsonString);
             ReturnSuccess(context.Response);
         }

@@ -230,6 +230,7 @@
     <Content Include="Contents\OnlyReadPermission.docx" />
     <Content Include="Contents\Test.xlsx" />
     <Content Include="Contents\Test.pptx" />
+    <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Properties\PublishProfiles\fd.pubxml" />
     <None Include="Properties\PublishProfiles\test.pubxml" />
     <None Include="Properties\PublishProfiles\wopi - FTP %282%29.pubxml" />

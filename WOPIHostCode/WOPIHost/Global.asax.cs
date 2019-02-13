@@ -26,6 +26,8 @@ namespace WOPIHost
 
             routes.Add("WopiFileRoute", new Route("wopi/files/{filename}", new WOPIHost.Controllers.WopiRouteHandler()));
             routes.Add("WopiFileContentRoute", new Route("wopi/files/{filename}/contents", new WOPIHost.Controllers.WopiRouteHandler()));
+            routes.Add("WopiFolderRoute", new Route("wopi/folders/{foldername}", new WOPIHost.Controllers.WopiRouteHandler()));
+            routes.Add("WopiFolderChildrenRoute", new Route("wopi/folders/{foldername}/children", new WOPIHost.Controllers.WopiRouteHandler()));
 
             routes.MapRoute(
                 name: "Default",

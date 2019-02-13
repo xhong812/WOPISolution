@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
 using WOPIHost.Models;
+using System.IO;
 
 namespace WOPIHost.Controllers
 {
@@ -36,6 +37,14 @@ namespace WOPIHost.Controllers
 
             IFileStorage storage = FileStorageFactory.CreateFileStorage();
             List<string> fileNames = storage.GetFileNames();
+
+            DirectoryInfo dir = storage.GetDirecotry();
+            FileLink dirLink = new FileLink();
+            dirLink.Name = dir.Name;
+            dirLink.Url = string.Format("http://{0}/WopiValidator/Index/{1}",
+                ConfigurationManager.AppSettings["WOPIServerName"],
+                dirLink.Name);
+            files.Add(dirLink);
 
             foreach (string fileName in fileNames)
             {

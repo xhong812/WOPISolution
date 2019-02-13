@@ -45,6 +45,7 @@ namespace WOPIHost.Controllers
         public bool UserCanRename { get; set; }
         public bool SupportsGetLock { get; set; }
         public bool SupportsUserInfo { get; set; }
+        //public bool SupportsDeleteFile { get; set; }
 
         public string[] SupportedShareUrlTypes { get; set; }
         public string UserInfo { get; set; }
@@ -87,37 +88,49 @@ namespace WOPIHost.Controllers
         public string Name { get; set; }
     }
 
+    class EnumerateChildrenResponse
+    {
+        public Child[] Children { get; set; }
+    }
+
+    class Child
+    {
+        public string Url { get; set; }
+        public string Name { get; set; }
+        public string Version { get; set; }
+    }
+
     class CheckFolderInfoResponse
     {
         public string FolderName { get; set; }
-        public string BreadcrumbBrandIconUrl { get; set; }
-        public string BreadcrumbBrandName { get; set; }
-        public string BreadcrumbBrandUrl { get; set; }
-        public string BreadcrumbDocName { get; set; }
-        public string BreadcrumbDocUrl { get; set; }
-        public string BreadcrumbFolderName { get; set; }
-        public string BreadcrumbFolderUrl { get; set; }
-        public string ClientUrl { get; set; }
-        public bool CloseButtonClosesWindow { get; set; }
-        public string CloseUrl { get; set; }
-        public string FileSharingUrl { get; set; }
-        public string HostAuthenticationId { get; set; }
-        public string HostEditUrl { get; set; }
-        public string HostEmbeddedEditUrl { get; set; }
-        public string HostEmbeddedViewUrl { get; set; }
-        public string HostName { get; set; }
-        public string HostViewUrl { get; set; }
+        //public string BreadcrumbBrandIconUrl { get; set; }
+        //public string BreadcrumbBrandName { get; set; }
+        //public string BreadcrumbBrandUrl { get; set; }
+        //public string BreadcrumbDocName { get; set; }
+        //public string BreadcrumbDocUrl { get; set; }
+        //public string BreadcrumbFolderName { get; set; }
+        //public string BreadcrumbFolderUrl { get; set; }
+        //public string ClientUrl { get; set; }
+        //public bool CloseButtonClosesWindow { get; set; }
+        //public string CloseUrl { get; set; }
+        //public string FileSharingUrl { get; set; }
+        //public string HostAuthenticationId { get; set; }
+        //public string HostEditUrl { get; set; }
+        //public string HostEmbeddedEditUrl { get; set; }
+        //public string HostEmbeddedViewUrl { get; set; }
+        //public string HostName { get; set; }
+        //public string HostViewUrl { get; set; }
         public string OwnerId { get; set; }
-        public string PresenceProvider { get; set; }
-        public string PresenceUserId { get; set; }
-        public string PrivacyUrl { get; set; }
-        public string SignoutUrl { get; set; }
-        public bool SupportsSecureStore { get; set; }
-        public string TenantId { get; set; }
-        public string TermsOfUseUrl { get; set; }
-        public bool UserCanWrite { get; set; }
-        public string UserFriendlyName { get; set; }
-        public string UserId { get; set; }
-        public bool WebEditingDisabled { get; set; }
+        //public string PresenceProvider { get; set; }
+        //public string PresenceUserId { get; set; }
+        //public string PrivacyUrl { get; set; }
+        //public string SignoutUrl { get; set; }
+        //public bool SupportsSecureStore { get; set; }
+        //public string TenantId { get; set; }
+        //public string TermsOfUseUrl { get; set; }
+        //public bool UserCanWrite { get; set; }
+        //public string UserFriendlyName { get; set; }
+        //public string UserId { get; set; }
+        //public bool WebEditingDisabled { get; set; }
     }
 }
