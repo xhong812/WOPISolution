@@ -602,15 +602,15 @@ namespace WOPIHost.Controllers
                 return;
             }
 
-            // The WOPI spec allows for a PutFile to succeed on a non-locked file if the file is currently zero bytes in length.
-            // This allows for a more efficient Create New File flow that saves the Lock roundtrips.
-            if (!hasExistingLock && size != 0)
-            {
-                // With no lock and a non-zero file, a PutFile could potentially result in data loss by clobbering
-                // existing content.  Therefore, return a lock mismatch error.
-                ReturnLockMismatch(context.Response, reason: "PutFile on unlocked file with current size != 0");
-                return;
-            }
+            //// The WOPI spec allows for a PutFile to succeed on a non-locked file if the file is currently zero bytes in length.
+            //// This allows for a more efficient Create New File flow that saves the Lock roundtrips.
+            //if (!hasExistingLock && size != 0)
+            //{
+            //    // With no lock and a non-zero file, a PutFile could potentially result in data loss by clobbering
+            //    // existing content.  Therefore, return a lock mismatch error.
+            //    ReturnLockMismatch(context.Response, reason: "PutFile on unlocked file with current size != 0");
+            //    return;
+            //}
 
             // Either the file has a valid lock that matches the lock in the request, or the file is unlocked
             // and is zero bytes.  Either way, proceed with the PutFile.
@@ -1149,6 +1149,15 @@ namespace WOPIHost.Controllers
                 return;
             }
 
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
             ReadSecureStoreResponse responseData = new ReadSecureStoreResponse
             {
                 UserName = "WOPITestUser",
@@ -1156,6 +1165,14 @@ namespace WOPIHost.Controllers
                 IsWindowsCredentials = true,
                 IsGroup = false
             };
+
+            if (!string.IsNullOrEmpty(requestData.Headers.Get("X-WOPI-PerfTraceRequested")))
+            {
+                if (Boolean.Parse(requestData.Headers.Get("X-WOPI-PerfTraceRequested")))
+                {
+                    context.Response.AddHeader("X-WOPI-PerfTrace", "test data");
+                }
+            }
 
             string jsonString = JsonConvert.SerializeObject(responseData);
 
@@ -1371,6 +1388,8 @@ namespace WOPIHost.Controllers
 
         private static void ReturnStatus(HttpResponse response, int code, string description)
         {
+            response.AddHeader("X-WOPI-ServerVersion", "TestServerVersion");
+            response.AddHeader("X-WOPI-MachineName", "TestMachineName");
             response.StatusCode = code;
             response.StatusDescription = description;
         }
