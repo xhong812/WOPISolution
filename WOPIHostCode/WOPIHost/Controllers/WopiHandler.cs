@@ -725,6 +725,10 @@ namespace WOPIHost.Controllers
             {
                 Name = newFileName,
                 Url = "http://" + context.Request.Url.Authority + context.Request.Url.AbsolutePath.Replace(requestData.Id, newFileName) + "?access_token=" +
+                        AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), newFileName.ToLower())),
+                HostViewUrl = "http://" + context.Request.Url.Authority + context.Request.Url.AbsolutePath.Replace(requestData.Id, newFileName) + "?access_token=" +
+                        AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), newFileName.ToLower())),
+                HostEditUrl = "http://" + context.Request.Url.Authority + context.Request.Url.AbsolutePath.Replace(requestData.Id, newFileName) + "?access_token=" +
                         AccessTokenUtil.WriteToken(AccessTokenUtil.GenerateToken("TestUser".ToLower(), newFileName.ToLower()))
             };
 
