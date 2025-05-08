@@ -7,6 +7,8 @@ namespace WOPIHost.Controllers
     {
         None,
 
+        AddActivities,
+
         CheckFileInfo,
         PutRelativeFile,
 
