@@ -67,6 +67,10 @@ namespace WOPIHost.Controllers
             // Call the appropriate handler for the WOPI request we received
             switch (requestData.Type)
             {
+                case RequestType.AddActivities:
+                    HandleAddActivitiesRequest(context, requestData);
+                    break;
+
                 case RequestType.CheckFileInfo:
                     HandleCheckFileInfoRequest(context, requestData);
                     break;
@@ -218,6 +222,10 @@ namespace WOPIHost.Controllers
 
                         switch (wopiOverride)
                         {
+                            case "ADD_ACTIVITIES":
+                                requestData.Type = RequestType.AddActivities;
+                                break;
+
                             case "PUT_RELATIVE":
                                 requestData.Type = RequestType.PutRelativeFile;
                                 break;
@@ -302,6 +310,78 @@ namespace WOPIHost.Controllers
         #region Processing for each of the WOPI operations
 
         /// <summary>
+        /// Processes a AddActivities request
+        /// </summary>
+
+        public class AddActivitiesRequest
+        {
+            public List<Activity> Activities { get; set; }
+        }
+
+        public class Activity
+        {
+            public string Type { get; set; }
+            public string Id { get; set; }
+            public string Timestamp { get; set; }
+            public ActivityData Data { get; set; }
+        }
+
+        public class ActivityData
+        {
+            public string ContentId { get; set; }
+            public string ContentAction { get; set; }
+        }
+
+
+
+        private void HandleAddActivitiesRequest(HttpContext context, WopiRequest requestData)
+        {
+            if (!ValidateAccess(requestData, writeAccessRequired: false))
+            {
+                ReturnInvalidToken(context.Response);
+                return;
+            }
+
+            IFileStorage storage = FileStorageFactory.CreateFileStorage();
+            long size = storage.GetFileSize(requestData.Id);
+
+            if (size == -1)
+            {
+                ReturnFileUnknown(context.Response);
+                return;
+            }
+
+            using (StreamReader reader = new StreamReader(context.Request.InputStream))
+            {
+                string requestBody = reader.ReadToEnd();
+                var activitiesRequest = JsonConvert.DeserializeObject<AddActivitiesRequest>(requestBody);
+
+                var activityResponses = new List<ActivityResponse>();
+
+                foreach (var activity in activitiesRequest.Activities)
+                {
+                    var response = new ActivityResponse
+                    {
+                        Id = activity.Id,
+                        Status = 0, 
+                        Message = ""
+                    };
+                    activityResponses.Add(response);
+                }
+            
+                AddActivitiesResponse responseData = new AddActivitiesResponse
+                {
+                    ActivityResponses = activityResponses
+                };
+
+                string jsonString = JsonConvert.SerializeObject(responseData);
+                context.Response.ContentType = "application/json";
+                context.Response.Write(jsonString);
+                ReturnSuccess(context.Response);
+            }
+        }
+
+        /// <summary>
         /// Processes a CheckFileInfo request
         /// </summary>
         /// <remarks>
@@ -347,7 +427,7 @@ namespace WOPIHost.Controllers
                     BreadcrumbFolderUrl = "http://" + context.Request.Url.Host,
 
                     UserFriendlyName = "A WOPI User",
-
+                    SupportsAddActivities = true,
                     SupportsLocks = true,
                     SupportsUpdate = true,
                     UserCanNotWriteRelative = false,

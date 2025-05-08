@@ -1,6 +1,21 @@
-﻿
+﻿using System.Collections.Generic;
+
 namespace WOPIHost.Controllers
 {
+
+    class ActivityResponse
+    {
+        public string Id { get; set; }
+        public int Status { get; set; }
+        public string Message { get; set; }
+    }
+
+
+    class AddActivitiesResponse
+    {
+        public List<ActivityResponse> ActivityResponses { get; set; }
+    }
+
     class CheckFileInfoResponse
     {
         // This is a subset of all CheckFileInfo properties.
@@ -21,6 +36,8 @@ namespace WOPIHost.Controllers
 
         public bool UserCanWrite { get; set; }
         public bool ReadOnly { get; set; }
+
+        public bool SupportsAddActivities { get; set; }
         public bool SupportsLocks { get; set; }
         public bool SupportsUpdate { get; set; }
         public bool UserCanNotWriteRelative { get; set; }
