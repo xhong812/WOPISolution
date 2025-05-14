@@ -22,9 +22,13 @@ namespace WOPIHost.Controllers
         // Use optional properties in accordance with the [MS-WOPI] Web Application Open Platform Interface Protocol specification.
 
         public string BaseFileName { get; set; }
+        public string OfficeCollaborationServiceEndpointUrl { get; set; }
+        public string OpenInClientCommandUrl { get; set; }
+        public bool OpenInClientPostMessage { get; set; }
         public string OwnerId { get; set; }
         public int Size { get; set; }
         public string UserId { get; set; }
+        public string UserPrincipalName { get; set; }
         public string Version { get; set; }
         public string FileExtension { get; set; }
 
