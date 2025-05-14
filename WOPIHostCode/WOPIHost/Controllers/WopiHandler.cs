@@ -412,10 +412,14 @@ namespace WOPIHost.Controllers
                 {
                     // required CheckFileInfo properties
                     BaseFileName = Path.GetFileName(requestData.Id),
+                    OfficeCollaborationServiceEndpointUrl = "http://" + context.Request.Url.Host,
+                    OpenInClientCommandUrl = "http://" + context.Request.Url.Host,
+                    OpenInClientPostMessage = false,
                     OwnerId = "documentOwnerId",
                     Size = Convert.ToInt32(size),
                     Version = storage.GetFileVersion(requestData.Id),
                     UserId = "WOPITestUser",
+                    UserPrincipalName = "A WOPI User",
                     FileExtension = Path.GetExtension(requestData.Id),
 
                     // optional CheckFileInfo properties
